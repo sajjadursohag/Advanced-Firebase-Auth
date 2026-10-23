@@ -9,6 +9,7 @@ import { auth } from "../firebase/firebase.init";
 
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
+githubProvider.addScope("user:email");
 
 const Login = () => {
   const [user, setUser] = useState(null);
@@ -27,12 +28,26 @@ const Login = () => {
 
   const handleGithubSignIn = () => {
     signInWithPopup(auth, githubProvider)
-      .then(result => {
+      .then((result) => {
         console.log(result.user);
-        setUser(result.user)
+
+        const loggedInUser = result.user;
+
+        if (!loggedInUser.email) {
+          if (loggedInUser.providerData) {
+            const gitProvider = loggedInUser.providerData.find(
+              (p) => p.providerId === "github.com",
+            );
+            if (gitProvider && gitProvider.email) {
+              loggedInUser.email = gitProvider.email;
+              // setUser(loggedInUser);
+            }
+          }
+        }
+        setUser(result.user);
       })
-      .catch(error => {
-        console.log(error)
+      .catch((error) => {
+        console.log(error);
       });
   };
 
